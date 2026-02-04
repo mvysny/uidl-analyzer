@@ -8,6 +8,7 @@ class Component
   def initialize(node_id)
     @classnames = []
     @node_id = node_id
+    @executions = []
   end
   # @return [Integer] the component ID in the UIDL protocol
   attr_reader :node_id
@@ -18,11 +19,14 @@ class Component
   attr_accessor :id
   # @return [Array] class names (the value of the `class` attribute)
   attr_accessor :classnames
+  # @return [Array<Execution>] javascript executions for this component
+  attr_accessor :executions
 
   def to_s
     s = "#{node_id}<#{tag}>"
     s += '#' + id unless id.nil?
     s += classnames.map { ".#{it}" }.join
+    s += ",executions=#{executions.count}" unless executions.empty?
     s
   end
 
@@ -32,13 +36,41 @@ class Component
   end
 end
 
+class Execution
+  def initialize(array)
+    @command = array.last
+    @args = array[..-2]
+    apply_param = @command.match(/\.apply\(\$(\d+)\)$/)
+    return unless apply_param
+
+    node = args[apply_param[1].to_i]
+    return unless node.is_a?(Hash) && !node['@v-node'].nil?
+
+    # Vaadin 25 way of referring to components
+    @node_id = Integer(node['@v-node'])
+  end
+  # @return [String] the JavaScript command to run
+  attr_reader :command
+  # @return [Array] parameters
+  attr_reader :args
+  # @return [Integer | nil] node id if this execution comes from a component
+  attr_reader :node_id
+
+  def to_s
+    command + "; node_id=#{node_id}"
+  end
+end
+
 # The parsed UIDL file
 class UIDL
   def initialize
     @components = Hash.new { |h, k| h[k] = Component.new(k) }
+    @executions = []
   end
   # @return [Hash<Integer => Component] maps {Component.node_id} to {Component}
   attr_reader :components
+  # @return [Array<Execution>] list of executions
+  attr_reader :executions
 
   # @param change JSON node such as `{node:1798,type:put,key:tag,value:vaadin-icon}`
   def add_change(change)
@@ -53,6 +85,11 @@ class UIDL
     end
   end
 
+  def add_execution(execution)
+    executions << execution
+    components[execution.node_id].executions << execution unless execution.node_id.nil?
+  end
+
   # @return [UIDL]
   def self.parse(file_name)
     json = File.read(file_name)
@@ -60,10 +97,16 @@ class UIDL
     j = JSON.parse(json)
     c = j[0]['changes']
     e = j[0]['execute']
-    puts "JSON: #{j.to_s.length / 1024}k; changes #{c.to_s.length / 1024}k, execute #{e.to_s.length / 1024}k"
+    puts "JSON sizes in bytes: #{j.to_s.length / 1024}k; changes #{c.to_s.length / 1024}k, execute #{e.to_s.length / 1024}k"
     uidl = UIDL.new
     c.each { uidl.add_change it }
+    e.each { uidl.add_execution Execution.new(it) }
     uidl
+  end
+
+  # @return [Array<Component>]
+  def new_components
+    components.values.filter { it.new? }
   end
 
   # Calculates statistics of how many new components of particular tag
@@ -80,8 +123,16 @@ class UIDL
   end
 end
 
+puts '* Parsing UIDL'
 uidl = UIDL.parse('vaadin25-dump0.uidl')
+puts "* New Components: #{uidl.new_components.length}"
 tag_counts = uidl.new_component_tag_counts
 puts tag_counts
+puts '* Most common component'
 most_common_tag = tag_counts.max_by { |_k, v| v }[0]
 puts uidl.find_by_tag(most_common_tag)
+
+puts "* Executions: #{uidl.executions.length}"
+puts '* Component with most executions'
+most_executions = uidl.components.values.map { [it, it.executions.length] }.max_by { it[1] }
+puts most_executions
