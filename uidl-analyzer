@@ -1,0 +1,82 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'json'
+
+# A client-side view of a Vaadin Component
+class Component
+  def initialize(node_id)
+    @classnames = []
+    @node_id = node_id
+  end
+  # @return [Integer] the component ID in the UIDL protocol
+  attr_reader :node_id
+  # @return [String | nil] the element tag name, `nil` if not known (the UIDL change doesn't add the component,
+  # it only updates its properties)
+  attr_accessor :tag
+  # @return [String | nil] the `id` attribute if the element has any
+  attr_accessor :id
+  # @return [Array] class names (the value of the `class` attribute)
+  attr_accessor :classnames
+
+  def to_s
+    s = "#{node_id}<#{tag}>"
+    s += '#' + id unless id.nil?
+    s += classnames.map { ".#{it}" }.join
+    s
+  end
+
+  # @return [Boolean] true if this is a new component introduced in this UIDL.
+  def new?
+    !tag.nil?
+  end
+end
+
+# The parsed UIDL file
+class UIDL
+  def initialize
+    @components = Hash.new { |h, k| h[k] = Component.new(k) }
+  end
+  # @return [Hash<Integer => Component] maps {Component.node_id} to {Component}
+  attr_reader :components
+
+  # @param change JSON node such as `{node:1798,type:put,key:tag,value:vaadin-icon}`
+  def add_change(change)
+    node_id = Integer(change['node'])
+    c = components[node_id]
+    if change['type'] == 'put' && change['key'] == 'tag'
+      c.tag = change['value']
+    elsif change['type'] == 'put' && change['key'] == 'id'
+      c.id = change['value']
+    elsif change['type'] == 'splice' && change['feat'] == 11
+      c.classnames.concat(change['add']) unless change['add'].nil?
+    end
+  end
+
+  # @return [UIDL]
+  def self.parse(file_name)
+    json = File.read(file_name)
+    json = json.delete_prefix 'for(;;);'
+    j = JSON.parse(json)
+    c = j[0]['changes']
+    e = j[0]['execute']
+    puts "JSON: #{j.to_s.length / 1024}k; changes #{c.to_s.length / 1024}k, execute #{e.to_s.length / 1024}k"
+    uidl = UIDL.new
+    c.each { uidl.add_change it }
+    uidl
+  end
+
+  def new_component_tag_counts
+    tags = components.values.filter_map { it.tag if it.new? }
+    tags.group_by { it }.transform_values { it.length }
+  end
+
+  # @return [Array<Component>]
+  def find_by_tag(tag)
+    components.values.filter { it.tag == tag }
+  end
+end
+
+uidl = UIDL.parse('dump0.uidl')
+puts uidl.new_component_tag_counts
+puts uidl.find_by_tag('div')
