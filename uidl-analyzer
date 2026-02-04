@@ -135,4 +135,4 @@ puts uidl.find_by_tag(most_common_tag)
 puts "* Executions: #{uidl.executions.length}"
 puts '* Component with most executions'
 most_executions = uidl.components.values.map { [it, it.executions.length] }.max_by { it[1] }
-puts most_executions
+puts most_executions[0]

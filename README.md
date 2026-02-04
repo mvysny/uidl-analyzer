@@ -66,4 +66,19 @@ You can see that a component with node ID (internal ID used by UIDL for every Co
 
 ## Analyzing UIDL
 
-Run the `./uidl-analyzer`. It is a simple Ruby script which reads the UIDL and dumps some statistics. 
+Run the `./uidl-analyzer`. It is a simple Ruby script which reads the UIDL and dumps some statistics:
+```
+* Parsing UIDL
+JSON sizes in bytes: 4k; changes 2k, execute 0k
+* New Components: 3
+{"vaadin-button" => 1, "vaadin-text-field" => 1, "vaadin-vertical-layout" => 1}
+* Most common component
+5<vaadin-button>
+* Executions: 3
+* Component with most executions
+3<>,executions=1
+```
+You start seeing network/CPU issues if:
+* The number of new components is too high: 500+ . This usually happens in large Grids when overusing ComponentRenderers
+* The number of executions is too high
+
