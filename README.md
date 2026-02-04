@@ -1,0 +1,66 @@
+# Vaadin 23+ UIDL analyzer
+
+If your Vaadin communication grows significantly, this script will tell you
+what is the main meat of that communication.
+
+## UIDL anatomy
+
+Run [vaadin-boot-example-gradle](https://github.com/mvysny/vaadin-boot-example-gradle) and open the "Network" tab in your browser dev tools.
+Find requests named `/?v-r=uidl&v-uiId=*` and save those as
+`dump0.uidl`. The JSON file will roughly look as follows:
+```JSON
+[
+  {
+    "clientId": 1,
+    "LAZY": [
+    ],
+    "constants": {
+    },
+    "changes": [
+      {
+        "node": 5,
+        "type": "attach"
+      },
+      {
+        "node": 5,
+        "type": "put",
+        "key": "tag",
+        "feat": 0,
+        "value": "vaadin-button"
+      },
+      {
+        "node": 5,
+        "type": "put",
+        "key": "theme",
+        "feat": 3,
+        "value": "primary"
+      }
+    ],
+    "execute": [
+      [
+        false,
+        {
+          "@v-node": 6
+        },
+        "return (async function() { this.invalid = $0}).apply($1)"
+      ],
+      [
+        false,
+        {
+          "@v-node": 3
+        },
+        "return (async function() { this.serverConnected($0)}).apply($1)"
+      ]
+    ],
+    "timings": [
+      970,
+      1
+    ],
+    "syncId": 1
+  }
+]
+```
+Most important parts are `execute` and `changes`:
+* `changes` update component properties, add new components and remove existing ones
+* `execute` lists all JavaScript snippets executed via `UI.getCurrent().getPage().executeJs()`
+
