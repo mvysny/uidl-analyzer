@@ -12,10 +12,8 @@ Find requests named `/?v-r=uidl&v-uiId=*` and save those as
 [
   {
     "clientId": 1,
-    "LAZY": [
-    ],
-    "constants": {
-    },
+    "LAZY": [...],
+    "constants": {...},
     "changes": [
       {
         "node": 5,
@@ -63,4 +61,6 @@ Find requests named `/?v-r=uidl&v-uiId=*` and save those as
 Most important parts are `execute` and `changes`:
 * `changes` update component properties, add new components and remove existing ones
 * `execute` lists all JavaScript snippets executed via `UI.getCurrent().getPage().executeJs()`
+
+You can see that a component with node ID (internal ID used by UIDL for every Component) has been attached; it is a `<vaadin-button>` with the `primary` theme. Some nodes also executed certain async calls (v-node 6 set its `invalid` property to `false`; that is a TextField but I've ommitted it from the snippet above for brevity).
 
