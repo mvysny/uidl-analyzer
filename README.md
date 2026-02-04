@@ -64,3 +64,6 @@ Most important parts are `execute` and `changes`:
 
 You can see that a component with node ID (internal ID used by UIDL for every Component) has been attached; it is a `<vaadin-button>` with the `primary` theme. Some nodes also executed certain async calls (v-node 6 set its `invalid` property to `false`; that is a TextField but I've ommitted it from the snippet above for brevity).
 
+## Analyzing UIDL
+
+Run the `./uidl-analyzer`. It is a simple Ruby script which reads the UIDL and dumps some statistics. 
