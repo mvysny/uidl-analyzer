@@ -123,16 +123,22 @@ class UIDL
   end
 end
 
-puts '* Parsing UIDL'
-uidl = UIDL.parse('vaadin25-dump0.uidl')
-puts "* New Components: #{uidl.new_components.length}"
-tag_counts = uidl.new_component_tag_counts
-puts tag_counts
-puts '* Most common component'
-most_common_tag = tag_counts.max_by { |_k, v| v }[0]
-puts uidl.find_by_tag(most_common_tag)
+def analyze_uidl(file_name)
+  puts
+  puts "* Parsing UIDL #{file_name}"
+  uidl = UIDL.parse(file_name)
+  puts "* New Components: #{uidl.new_components.length}"
+  tag_counts = uidl.new_component_tag_counts
+  puts tag_counts
+  puts '* Most common component'
+  most_common_tag = tag_counts.max_by { |_k, v| v }[0]
+  puts uidl.find_by_tag(most_common_tag)
 
-puts "* Executions: #{uidl.executions.length}"
-puts '* Component with most executions'
-most_executions = uidl.components.values.map { [it, it.executions.length] }.max_by { it[1] }
-puts most_executions[0]
+  puts "* Executions: #{uidl.executions.length}"
+  puts '* Component with most executions'
+  most_executions = uidl.components.values.map { [it, it.executions.length] }.max_by { it[1] }
+  puts most_executions[0]
+end
+
+analyze_uidl('vaadin25-dump0.uidl')
+analyze_uidl('vaadin24-dump0.uidl')
