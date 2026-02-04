@@ -66,6 +66,9 @@ class UIDL
     uidl
   end
 
+  # Calculates statistics of how many new components of particular tag
+  # were created.
+  # @return [Hash{String => Integer}] maps tag name to number of occurrences.
   def new_component_tag_counts
     tags = components.values.filter_map { it.tag if it.new? }
     tags.group_by { it }.transform_values { it.length }
@@ -78,5 +81,7 @@ class UIDL
 end
 
 uidl = UIDL.parse('vaadin25-dump0.uidl')
-puts uidl.new_component_tag_counts
-puts uidl.find_by_tag('div')
+tag_counts = uidl.new_component_tag_counts
+puts tag_counts
+most_common_tag = tag_counts.max_by { |_k, v| v }[0]
+puts uidl.find_by_tag(most_common_tag)
