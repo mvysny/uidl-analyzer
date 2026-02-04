@@ -44,10 +44,12 @@ class Execution
     return unless apply_param
 
     node = args[apply_param[1].to_i]
-    return unless node.is_a?(Hash) && !node['@v-node'].nil?
-
-    # Vaadin 25 way of referring to components
-    @node_id = Integer(node['@v-node'])
+    if node.is_a?(Hash) && !node['@v-node'].nil?
+      # Vaadin 24/25 way of referring to components
+      @node_id = Integer(node['@v-node'])
+    elsif node.is_a?(Array) && node.length == 2 && node[0] == 0
+      @node_id = node[1]
+    end
   end
   # @return [String] the JavaScript command to run
   attr_reader :command
@@ -138,7 +140,12 @@ def analyze_uidl(file_name)
   puts '* Component with most executions'
   most_executions = uidl.components.values.map { [it, it.executions.length] }.max_by { it[1] }
   puts most_executions[0]
+  # Uncomment to have a dump of all components
+  # puts uidl.new_components
+  # Uncomment to have a dump of all executions
+  # puts uidl.executions
 end
 
 analyze_uidl('vaadin25-dump0.uidl')
 analyze_uidl('vaadin24-dump0.uidl')
+analyze_uidl('vaadin23-dump0.uidl')
