@@ -136,7 +136,7 @@ def analyze_uidl(file_name)
   most_common_tag = tag_counts.max_by { |_k, v| v }[0]
   puts uidl.find_by_tag(most_common_tag)
 
-  puts "* Executions: #{uidl.executions.length}"
+  puts "* Executions: #{uidl.executions.length}; with no owner component: #{uidl.executions.count { it.node_id.nil? }}"
   puts '* Component with most executions'
   most_executions = uidl.components.values.map { [it, it.executions.length] }.max_by { it[1] }
   puts most_executions[0]
