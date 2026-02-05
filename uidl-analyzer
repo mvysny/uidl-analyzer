@@ -41,7 +41,7 @@ class Execution
     @command = array.last
     @args = array[..-2]
     apply_param = @command.match(/\.apply\(\$(\d+)\)$/)
-    apply_param = @command.match(/^return \$(\d+)\./) if apply_param.nil?
+    apply_param = @command.match(/\$(\d+)\.\$connector/) if apply_param.nil?
     return if apply_param.nil?
 
     node = args[apply_param[1].to_i]
